@@ -1,135 +1,161 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Github, Linkedin, Instagram, ArrowDown } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { ArrowDown, Github, Linkedin, Instagram } from 'lucide-react';
+import TechMarquee from './TechMarquee';
+import Magnetic from './Magnetic';
+import { PROFILE } from '@/data/profile';
 
-export default function HeroSection({ heroImage }) {
+const ICONS = { GitHub: Github, LinkedIn: Linkedin, Instagram };
+const EASE = [0.22, 1, 0.36, 1];
+
+const lineReveal = {
+  hidden: { y: '105%' },
+  show: (i) => ({ y: 0, transition: { duration: 1.05, ease: EASE, delay: 0.15 + i * 0.12 } }),
+};
+const fade = (delay) => ({
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.8, ease: EASE, delay },
+});
+
+const GRID = 'linear-gradient(to right, rgba(143,163,192,.22) 1px, transparent 1px), linear-gradient(to bottom, rgba(143,163,192,.22) 1px, transparent 1px)';
+
+export default function HeroSection({ photo }) {
+  const ref = useRef(null);
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, { stiffness: 90, damping: 22, mass: 0.6 });
+  const sy = useSpring(my, { stiffness: 90, damping: 22, mass: 0.6 });
+
+  // Posición inicial del foco: visible aunque no haya mouse (celulares)
+  useEffect(() => {
+    const r = ref.current.getBoundingClientRect();
+    mx.set(r.width * 0.66);
+    my.set(r.height * 0.4);
+  }, [mx, my]);
+
+  const onMove = (e) => {
+    const r = ref.current.getBoundingClientRect();
+    mx.set(e.clientX - r.left);
+    my.set(e.clientY - r.top);
+  };
+
+  const glow = useMotionTemplate`radial-gradient(560px circle at ${sx}px ${sy}px, rgba(255,184,77,0.11), transparent 65%)`;
+  const gridMask = useMotionTemplate`radial-gradient(360px circle at ${sx}px ${sy}px, black, transparent 70%)`;
+  const px = useTransform(sx, (v) => (v - 700) * -0.02);
+  const py = useTransform(sy, (v) => (v - 400) * -0.02);
+
   return (
-    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden" style={{ backgroundColor: '#0A1628' }}>
-      {/* Aurora background image */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(10,22,40,0.3) 0%, rgba(10,22,40,0.5) 60%, rgba(10,22,40,0.95) 100%)' }} />
+    <section
+      id="hero"
+      ref={ref}
+      onPointerMove={onMove}
+      className="relative flex min-h-[100svh] flex-col overflow-hidden bg-navy"
+    >
+      {/* Fondo: grilla que se revela cerca del cursor + manchas lentas */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="orb absolute -left-40 top-1/4 h-[28rem] w-[28rem] rounded-full blur-[110px]" style={{ background: 'rgba(62,92,138,.32)', animation: 'drift1 22s ease-in-out infinite' }} />
+        <div className="orb absolute -right-24 bottom-1/4 h-[24rem] w-[24rem] rounded-full blur-[120px]" style={{ background: 'rgba(255,184,77,.10)', animation: 'drift2 28s ease-in-out infinite' }} />
+        <div className="absolute inset-0 opacity-[0.22]" style={{ backgroundImage: GRID, backgroundSize: '56px 56px' }} />
+        <motion.div className="absolute inset-0" style={{ backgroundImage: GRID, backgroundSize: '56px 56px', WebkitMaskImage: gridMask, maskImage: gridMask }} />
+        <motion.div className="absolute inset-0" style={{ backgroundImage: glow }} />
       </div>
 
-      {/* Starfield dots */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        {[...Array(40)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-white"
-            style={{
-              width: Math.random() * 2 + 1 + 'px',
-              height: Math.random() * 2 + 1 + 'px',
-              top: Math.random() * 100 + '%',
-              left: Math.random() * 100 + '%',
-              opacity: Math.random() * 0.6 + 0.2,
-              animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite`,
-              animationDelay: Math.random() * 3 + 's',
-            }}
-          />
-        ))}
-      </div>
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 items-center px-6 pb-16 pt-32">
+        <div className="grid w-full items-center gap-14 lg:grid-cols-[minmax(0,1fr)_19rem]">
+          <div>
+            <motion.div
+              {...fade(0.05)}
+              className="mb-8 inline-flex items-center gap-3 rounded-full border border-line bg-surface/60 py-1.5 pl-1.5 pr-4 text-sm text-mist backdrop-blur"
+            >
+              <img src={photo} alt="" className="h-8 w-8 rounded-full object-cover object-top lg:hidden" />
+              <span className="relative ml-1 flex h-2 w-2 lg:ml-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              Disponible para trabajar
+            </motion.div>
 
-      {/* Hero card */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full pt-28 pb-20">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="relative rounded-2xl overflow-hidden p-8 md:p-12 max-w-4xl"
-          style={{
-            background: 'rgba(10, 22, 40, 0.55)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(0, 212, 255, 0.25)',
-            boxShadow: '0 0 40px rgba(0, 212, 255, 0.08), inset 0 0 60px rgba(0,0,0,0.2)',
-          }}
-        >
-          {/* Rotating diamond decoration (right side) */}
-          <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden lg:flex items-center justify-center">
-            <div className="relative w-48 h-48">
-              <div className="absolute inset-0 rotate-45 border border-aurora-cyan/30 rounded-sm" />
-              <div className="absolute inset-4 rotate-45 border border-aurora-cyan/15 rounded-sm" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="font-mono text-aurora-cyan/60 text-4xl font-bold">{'{ }'}</span>
+            <h1
+              aria-label={PROFILE.name}
+              className="font-display font-extrabold leading-[0.9] tracking-[-0.04em] text-snow"
+              style={{ fontSize: 'clamp(3.5rem, 11vw, 8rem)' }}
+            >
+              {PROFILE.name.split(' ').map((word, i) => (
+                <span key={word} aria-hidden className="block overflow-hidden pb-[0.1em]">
+                  <motion.span className="block" variants={lineReveal} custom={i} initial="hidden" animate="show">
+                    {word}
+                  </motion.span>
+                </span>
+              ))}
+            </h1>
+
+            <motion.p {...fade(0.7)} className="mt-6 font-display text-xl font-medium text-snow md:text-2xl">
+              {PROFILE.role} en {PROFILE.location}
+            </motion.p>
+            <motion.p {...fade(0.85)} className="mt-3 max-w-lg text-lg leading-relaxed text-mist">
+              Desarrollo aplicaciones web de punta a punta: interfaces cuidadas en React y APIs con Node.js.
+            </motion.p>
+
+            <motion.div {...fade(1)} className="mt-10 flex flex-wrap items-center gap-4">
+              <Magnetic>
+                <a
+                  href="#projects"
+                  className="group inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-semibold text-navy transition-colors hover:bg-[#ffc56e]"
+                >
+                  Ver proyectos
+                  <ArrowDown size={16} className="transition-transform duration-300 group-hover:translate-y-0.5" />
+                </a>
+              </Magnetic>
+              <a
+                href="#contact"
+                className="rounded-full border border-line px-6 py-3 text-sm font-medium text-snow transition-colors hover:border-brand hover:text-brand"
+              >
+                Contactar
+              </a>
+              <div className="flex items-center gap-1 sm:ml-2">
+                {PROFILE.socials.map(({ label, href }) => {
+                  const Icon = ICONS[label];
+                  return (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-mist transition-colors hover:bg-surface hover:text-brand"
+                    >
+                      <Icon size={18} />
+                    </a>
+                  );
+                })}
               </div>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Metadata */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="font-mono text-xs text-aurora-green/70 mb-5 flex items-center gap-3"
+          {/* Retrato: duotono que vuelve a color al pasar el mouse */}
+          <motion.figure
+            style={{ x: px, y: py }}
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: EASE, delay: 0.5 }}
+            className="group relative hidden lg:block"
           >
-            <span className="inline-block w-8 h-px bg-aurora-green/50" />
-            <span>v2.0.0 // fullstack.developer</span>
-          </motion.div>
-
-          {/* Name */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.5 }}
-            className="font-display font-bold leading-none mb-6"
-            style={{ fontSize: 'clamp(3rem, 7vw, 5.5rem)', letterSpacing: '-0.03em' }}
-          >
-            <span className="text-white">Carlos<br /></span>
-            <span style={{ color: '#00FF87' }}>Bournot<span style={{ color: '#FF6B9D' }}>.</span></span>
-          </motion.h1>
-
-          {/* Tagline */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="text-white/70 text-base md:text-lg leading-relaxed max-w-md mb-8"
-          >
-            Fullstack Developer apasionado por el desarrollo de software. 
-            Fusiono diseño y tecnología en la creación de experiencias digitales cautivadoras.
-          </motion.p>
-
-          {/* Social icons */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="flex items-center gap-3 mb-8"
-          >
-            {[
-              { icon: Github, href: 'https://github.com/CarlosBournot' },
-              { icon: Linkedin, href: 'https://linkedin.com/in/carlos-bournot' },
-              { icon: Instagram, href: 'https://www.instagram.com/charlybournot/' },
-            ].map(({ icon: Icon, href }, i) => (
-              <a
-                key={i}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded flex items-center justify-center transition-all duration-300 hover:scale-110"
-                style={{ border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#00FF87'; e.currentTarget.style.background = 'rgba(0,255,135,0.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-              >
-                <Icon size={18} className="text-white/80" />
-              </a>
-            ))}
-          </motion.div>
-
-          {/* CTA */}
-          <motion.a
-            href="#projects"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded font-heading font-semibold text-sm uppercase tracking-widest transition-all duration-300"
-            style={{ border: '1px solid #FF6B9D', color: '#FF6B9D' }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#FF6B9D'; e.currentTarget.style.color = '#0A1628'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#FF6B9D'; }}
-          >
-            Ver Proyectos <ArrowDown size={14} />
-          </motion.a>
-        </motion.div>
+            <div aria-hidden className="absolute -inset-3 rounded-t-[10.5rem] rounded-b-3xl border border-brand/25" />
+            <div className="relative aspect-[4/5] overflow-hidden rounded-t-[10rem] rounded-b-2xl border border-line">
+              <img
+                src={photo}
+                alt={`Retrato de ${PROFILE.name}`}
+                className="h-full w-full object-cover grayscale brightness-110 contrast-[1.08] transition duration-700 group-hover:grayscale-0"
+              />
+              <div className="absolute inset-0 bg-[#6f8fc2] mix-blend-multiply transition-opacity duration-700 group-hover:opacity-0" />
+              <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-navy/80 to-transparent" />
+            </div>
+          </motion.figure>
+        </div>
       </div>
+
+      <TechMarquee />
     </section>
   );
 }

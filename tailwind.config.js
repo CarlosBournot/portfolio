@@ -12,15 +12,12 @@ module.exports = {
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
-        aurora: {
-          green: '#00FF87',
-          cyan: '#00D4FF',
-          pink: '#FF6B9D',
-          purple: '#BF5FFF',
-        },
         navy: '#0A1628',
-        'navy-light': '#0F1F35',
-        'navy-card': '#0D1B2E',
+        surface: '#0F1D33',
+        line: '#1B2D48',
+        mist: '#8FA3C0',
+        snow: '#EAF0F9',
+        brand: '#FFB84D',
   			card: {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'

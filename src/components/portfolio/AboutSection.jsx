@@ -1,70 +1,67 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import img from '../../images/img.jpeg';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
+import Section from './Section';
+import { PROFILE } from '@/data/profile';
 
-export default function AboutSection({ aboutImage }) {
+const TEXT =
+  'Durante mi proceso de aprendizaje desarrollé habilidades de trabajo en equipo, comunicación, liderazgo y resolución de problemas. Me apasiona la tecnología y la posibilidad de crear soluciones que aporten valor real a las personas y a las organizaciones.';
+
+const textClass = 'font-display text-[clamp(1.5rem,3vw,2.25rem)] font-medium leading-[1.25] tracking-[-0.01em] text-snow';
+
+function Word({ word, progress, range }) {
+  const opacity = useTransform(progress, range, [0.18, 1]);
   return (
-    <section id="about" className="relative py-32" style={{ backgroundColor: '#0A1628' }}>
-      <div className="max-w-6xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-16"
-        >
-          <div className="flex items-center gap-4 mb-4">
-            <span className="font-mono text-xs text-aurora-pink/50 uppercase tracking-widest">04</span>
-            <span className="h-px flex-1 bg-aurora-pink/10" />
+    <motion.span style={{ opacity }} className="mr-[0.28em] inline-block">
+      {word}
+    </motion.span>
+  );
+}
+
+// El texto se "enciende" palabra por palabra a medida que se lee (scroll).
+function ScrollLit({ text }) {
+  const ref = useRef(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.8', 'end 0.55'] });
+  const words = text.split(' ');
+
+  if (reduce) return <p className={textClass}>{text}</p>;
+
+  return (
+    <p ref={ref} className={textClass} aria-label={text}>
+      {words.map((w, i) => (
+        <Word key={i} word={w} progress={scrollYProgress} range={[i / words.length, (i + 1) / words.length]} />
+      ))}
+    </p>
+  );
+}
+
+const FACTS = [
+  { label: 'Ubicación', value: PROFILE.location },
+  { label: 'Disponibilidad', value: 'Disponible para trabajar', live: true },
+  { label: 'Formación', value: 'Técnico en Desarrollo de Software' },
+];
+
+export default function AboutSection() {
+  return (
+    <Section id="about" title="Sobre mí" intro="Desarrollador fullstack con foco en aprender y entregar.">
+      <ScrollLit text={TEXT} />
+
+      <dl className="mt-16 grid gap-x-10 border-t border-line sm:grid-cols-2">
+        {FACTS.map((f) => (
+          <div key={f.label} className="border-b border-line py-5">
+            <dt className="text-sm text-mist">{f.label}</dt>
+            <dd className="mt-1 flex items-center gap-2 font-display text-lg font-medium text-snow">
+              {f.live && (
+                <span className="relative flex h-2 w-2" aria-hidden>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
+              )}
+              {f.value}
+            </dd>
           </div>
-          <h2 className="font-display font-bold text-white tracking-tight" style={{ fontSize: 'clamp(2rem, 4vw, 4rem)', letterSpacing: '-0.03em' }}>
-            Sobre mí<span className="text-aurora-pink">.</span>
-          </h2>
-        </motion.div>
-
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="relative rounded-xl overflow-hidden"
-          >
-            <img src={img} alt="About" className="w-full object-cover opacity-70 rounded-xl" style={{ aspectRatio: '4/3' }} />
-            <div className="absolute inset-0 rounded-xl" style={{ background: 'linear-gradient(to top, rgba(10,22,40,0.9) 0%, transparent 60%)', border: '1px solid rgba(0,212,255,0.15)' }} />
-            <div className="absolute bottom-5 left-5 right-5">
-              <div className="font-mono text-xs space-y-1" style={{ color: 'rgba(0,212,255,0.5)' }}>
-                <p>location: Rosario, Argentina</p>
-                <p>status: <span className="text-aurora-green">available_for_hire</span></p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-          >
-            <p className="text-white/80 text-lg leading-relaxed mb-5">
-             Durante mi proceso de aprendizaje, he desarrollado habilidades de trabajo en equipo, comunicación, liderazgo y resolución de problemas.
-            </p>
-            <p className="text-white/55 text-base leading-relaxed mb-10">
-              Me apasiona la tecnología y la posibilidad de crear soluciones que aporten valor real a las personas y a las organizaciones
-            </p>
-            <div className="grid grid-cols-3 gap-6 pt-8" style={{ borderTop: '1px solid rgba(0,212,255,0.1)' }}>
-              {[
-                { label: 'Proyectos', value: '3+' },
-                { label: 'Tecnologías', value: '12+' },
-                { label: 'Año inicio', value: '2024' },
-              ].map((s) => (
-                <div key={s.label}>
-                  <p className="font-display font-bold text-3xl text-aurora-green">{s.value}</p>
-                  <p className="font-mono text-xs text-white/30 mt-1 uppercase tracking-wider">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    </section>
+        ))}
+      </dl>
+    </Section>
   );
 }

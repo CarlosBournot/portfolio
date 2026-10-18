@@ -1,77 +1,71 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion, useScroll, useSpring } from 'framer-motion';
 import { ExternalLink } from 'lucide-react';
+import Section from './Section';
 
-const education = [
-  { title: 'Data Analytics ', institution: 'Coderhouse', year: 'En Curso', },
-  { title: 'React JS Developer', institution: 'Educación IT', year: '2024', link: 'https://www.educacionit.com/perfil/Carlos-Bournot-906225/certificado/71417' },
-  { title: 'Tecnico en Desarrollo de Software', institution: 'IESN7', year: '2021 - 2024', link: 'https://refe.educacion.gob.ar/v/402224qFJ_ENZLuc4Kq2AF' },
-  
+const EDUCATION = [
+  { title: 'Data Analytics', institution: 'Coderhouse', period: '2026', link:'https://app.coderhouse.com/certificates/CERT-MTWYUOGN-AD633527' },
+  {
+    title: 'React JS Developer',
+    institution: 'Educación IT',
+    period: '2024',
+    link: 'https://www.educacionit.com/perfil/Carlos-Bournot-906225/certificado/71417',
+  },
+  {
+    title: 'Técnico en Desarrollo de Software',
+    institution: 'IESN7',
+    period: '2021 - 2024',
+    link: 'https://refe.educacion.gob.ar/v/402224qFJ_ENZLuc4Kq2AF',
+  },
 ];
 
-const ACCENT_COLORS = ['#00FF87', '#FF6B9D', '#00D4FF', '#BF5FFF'];
-
 export default function EducationSection() {
-  return (
-    <section id="education" className="relative py-32" style={{ backgroundColor: '#0A1628' }}>
-      <div className="max-w-4xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-16"
-        >
-          <div className="flex items-center gap-4 mb-4">
-            <span className="font-mono text-xs text-aurora-purple/50 uppercase tracking-widest">05</span>
-            <span className="h-px flex-1 bg-aurora-purple/10" />
-          </div>
-          <h2 className="font-display font-bold text-white tracking-tight" style={{ fontSize: 'clamp(2rem, 4vw, 4rem)', letterSpacing: '-0.03em' }}>
-            Educación<span style={{ color: '#BF5FFF' }}>.</span>
-          </h2>
-        </motion.div>
+  const ref = useRef(null);
+  // La línea de la cronología se dibuja a medida que se hace scroll
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.7', 'end 0.6'] });
+  const scaleY = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
-        <div className="space-y-4">
-          {education.map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group flex items-center justify-between gap-4 p-5 rounded-xl transition-all duration-300"
-              style={{
-                background: 'rgba(13, 27, 46, 0.6)',
-                border: `1px solid ${ACCENT_COLORS[i]}20`,
-                backdropFilter: 'blur(8px)',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT_COLORS[i] + '50'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = ACCENT_COLORS[i] + '20'; }}
+  return (
+    <Section id="education" title="Educación" intro="Formación y certificaciones, de la más reciente a la más antigua.">
+      <ol ref={ref} className="relative">
+        <span aria-hidden className="absolute bottom-2 left-[7px] top-2 w-px bg-line" />
+        <motion.span aria-hidden style={{ scaleY }} className="absolute bottom-2 left-[7px] top-2 w-px origin-top bg-brand" />
+
+        {EDUCATION.map((item) => (
+          <li key={item.title} className="relative pb-14 pl-10 last:pb-0">
+            <motion.span
+              aria-hidden
+              initial={{ borderColor: '#1B2D48' }}
+              whileInView={{ borderColor: '#FFB84D' }}
+              viewport={{ once: true, margin: '-35% 0px -35% 0px' }}
+              className="absolute left-0 top-2 h-[15px] w-[15px] rounded-full border-2 bg-navy"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: ACCENT_COLORS[i] }} />
-                <div>
-                  <h3 className="font-heading font-semibold text-white text-base group-hover:text-aurora-green transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="font-body text-sm text-white/40 mt-0.5">{item.institution}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <span className="font-mono text-xs text-white/30">{item.year}</span>
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 rounded flex items-center justify-center transition-all duration-300"
-                  style={{ border: `1px solid ${ACCENT_COLORS[i]}30`, color: ACCENT_COLORS[i] }}
-                >
-                  <ExternalLink size={12} />
-                </a>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
+              {item.current && (
+                <>
+                  <span className="absolute inset-[2px] animate-ping rounded-full bg-brand/70" />
+                  <span className="absolute inset-[2px] rounded-full bg-brand" />
+                </>
+              )}
+            </motion.span>
+
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+              <h3 className="font-display text-xl font-semibold tracking-tight text-snow md:text-2xl">{item.title}</h3>
+              <span className="whitespace-nowrap text-sm text-mist">{item.period}</span>
+            </div>
+            <p className="mt-1 text-mist">{item.institution}</p>
+            {item.link && (
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1.5 text-sm text-snow underline decoration-line underline-offset-4 transition-colors hover:text-brand hover:decoration-brand"
+              >
+                Ver certificado <ExternalLink size={13} />
+              </a>
+            )}
+          </li>
+        ))}
+      </ol>
+    </Section>
   );
 }
